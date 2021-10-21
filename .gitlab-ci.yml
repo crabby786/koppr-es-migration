@@ -1,0 +1,120 @@
+# This file is a template, and might need editing before it works on your project.
+# To contribute improvements to CI/CD templates, please follow the Development guide at:
+# https://docs.gitlab.com/ee/development/cicd/templates.html
+# This specific template is located at:
+# https://gitlab.com/gitlab-org/gitlab/-/blob/master/lib/gitlab/ci/templates/Getting-Started.gitlab-ci.yml
+
+# This is a sample GitLab CI/CD configuration file that should run without any modifications.
+# It demonstrates a basic 3 stage CI/CD pipeline. Instead of real tests or scripts,
+# it uses echo commands to simulate the pipeline execution.
+#
+# A pipeline is composed of independent jobs that run scripts, grouped into stages.
+# Stages run in sequential order, but jobs within stages run in parallel.
+#
+# For more information, see: https://docs.gitlab.com/ee/ci/yaml/index.html#stages
+
+stages:          # List of stages for jobs, and their order of execution
+  - build
+
+  - deploy
+
+# Build job for development branch
+build-job1:
+  stage: build
+
+  script:
+   - echo "Install all dependency"
+   - echo "Finish install && build npm "
+  tags:
+   - koppr-engine
+
+  only:
+   - development
+
+# Build job for qa branch
+build-job2:
+  stage: build
+
+  script:
+   - echo "Finish my code"
+   - echo "Start npm"
+  tags:
+   - qa-engine
+
+  only:
+   - qa
+
+# Deploy job
+# Deploy job in Dev server
+
+deploy-job1:
+  stage: deploy
+
+  variables:
+    server: "$dev_server"
+  
+  tags:
+   - koppr-engine
+  script:
+   - 'command -v ssh-agent >/dev/null || ( apt-get update -y && apt-get install openssh-client -y )'
+   - echo " Add ssh agent "
+   - eval $(ssh-agent -s)
+   - echo "agent added successfully"
+   - echo " add dev server private key "
+   - echo -e "$private_ssh_key_dev_server" > ~/.ssh/id_rsa
+   - chmod 600 ~/.ssh/id_rsa
+   - touch ~/.ssh/config
+   - chmod 600 ~/.ssh/config
+   - echo -e "Host *\n\tStrictHostKeyChecking no\n\n" > ~/.ssh/config
+   - echo "Private key added successfully"
+   - ssh-keyscan -t rsa $dev_server >> ~/.ssh/known_hosts
+   - echo "copy changes file in dev server for deployments"
+   - echo "Connect with ssh server"
+   - ssh -i ~/.ssh/id_rsa -o StrictHostKeyChecking=no ubuntu@$dev_server "bash koppr-engine.sh"
+   - echo "Deploy success"
+  tags:
+   - koppr-engine
+  
+  only:
+   - development
+
+# Deploy job over QA server
+deploy-job2:
+  stage: deploy
+
+  variables:
+   server: "$qa_server"
+ 
+  tags:
+   - qa-engine
+  script:
+   - 'command -v ssh-agent >/dev/null || ( apt-get update -y && apt-get install openssh-client -y )'
+   - echo " Add ssh agent "
+   - eval $(ssh-agent -s)
+   - echo "agent added successfully"
+   - echo " add dev server private key "
+   - echo -e "$private_ssh_key_qa_server" > ~/.ssh/id_rsa
+   - chmod 600 ~/.ssh/id_rsa
+   - touch ~/.ssh/config
+   - touch ~/.ssh/known_hosts
+   - chmod 600 ~/.ssh/known_hosts
+   - chmod 600 ~/.ssh/config
+   - echo -e "Host *\n\tStrictHostKeyChecking no\n\n" > ~/.ssh/config
+   - echo "Private key added successfully"
+   - ssh-keyscan -t rsa $qa_server >> ~/.ssh/known_hosts
+   - echo "copy changes file in dev server for deployments"
+   - echo "Connect with ssh server"
+   - ssh -i ~/.ssh/id_rsa -o StrictHostKeyChecking=no ubuntu@$qa_server "bash qa-engine.sh"
+   - echo "Deploy Success in QA Server"
+
+
+
+  tags:
+   - qa-engine
+  
+  only:
+   - qa
+  
+
+
+

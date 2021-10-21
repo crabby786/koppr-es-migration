@@ -1,0 +1,14 @@
+node_modules/
+node_modules
+package-lock.json
+dist/
+launch.json
+tsconfig.json
+tsconfig.*.json
+tsconfig.json
+dump.rdb
+*.DS_Store
+test.pdf
+*development.json
+server/config/environment/development.json
+.DS_Store
